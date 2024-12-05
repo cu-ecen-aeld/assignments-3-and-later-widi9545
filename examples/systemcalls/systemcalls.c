@@ -1,4 +1,12 @@
 #include "systemcalls.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <string.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -16,8 +24,15 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
+    int systemcall; 
+    systemcall = system(cmd);
+    if(systemcall == 0){
+        return true;
+    }
+    else{
+        return false;
+    }
 
-    return true;
 }
 
 /**
@@ -34,6 +49,20 @@ bool do_system(const char *cmd)
 *   by the command issued in @param arguments with the specified arguments.
 */
 
+
+
+
+/*
+ * TODO:
+ *   Execute a system command by calling fork, execv(),
+ *   and wait instead of system (see LSP page 161).
+ *   Use the command[0] as the full path to the command to execute
+ *   (first argument to execv), and use the remaining arguments
+ *   as second argument to the execv() command.
+ *
+*/
+
+
 bool do_exec(int count, ...)
 {
     va_list args;
@@ -49,19 +78,44 @@ bool do_exec(int count, ...)
     // and may be removed
     command[count] = command[count];
 
-/*
- * TODO:
- *   Execute a system command by calling fork, execv(),
- *   and wait instead of system (see LSP page 161).
- *   Use the command[0] as the full path to the command to execute
- *   (first argument to execv), and use the remaining arguments
- *   as second argument to the execv() command.
- *
-*/
+    //char * arr[] = {"ls", "-l", NULL};
+    int status;
+
+    //struct stat file_stat;
+
+
+    pid_t pid = fork();
+    //int status;
+
+
+    if( pid < 0 ){
+        printf("Fork failed");
+        va_end(args);
+        return false;
+    }
+
+    if(pid == 0){
+    execv(command[0], command);
+    _exit(EXIT_FAILURE);    
+    }
+
+    else{
+        wait(&status);
+        if( WEXITSTATUS(status) == 0){
+            va_end(args);
+            return true;
+        }
+        else{
+            va_end(args);
+            return false;
+        }
+    }
+
 
     va_end(args);
-
     return true;
+    
+    
 }
 
 /**
@@ -69,8 +123,11 @@ bool do_exec(int count, ...)
 *   This file will be closed at completion of the function call.
 * All other parameters, see do_exec above
 */
+
+
 bool do_exec_redirect(const char *outputfile, int count, ...)
 {
+    printf("where am i\n");
     va_list args;
     va_start(args, count);
     char * command[count+1];
@@ -84,14 +141,44 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     // and may be removed
     command[count] = command[count];
 
+    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
 
-/*
- * TODO
- *   Call execv, but first using https://stackoverflow.com/a/13784315/1446624 as a refernce,
- *   redirect standard out to a file specified by outputfile.
- *   The rest of the behaviour is same as do_exec()
- *
-*/
+
+    int status;
+
+    //struct stat file_stat;
+
+
+    pid_t pid = fork();
+    //int status;
+
+
+    if( pid < 0 ){
+        printf("Fork failed");
+        va_end(args);
+        close(fd);
+        return false;
+    }
+
+    if(pid == 0){
+    dup2(fd, 1);
+    execv(command[0], command);
+    _exit(EXIT_FAILURE);    
+    }
+
+    else{
+        wait(&status);
+        if( WEXITSTATUS(status) == 0){
+            va_end(args);
+            return true;
+        }
+        else{
+            va_end(args);
+            return false;
+        }
+    }
+    close(fd);
+
 
     va_end(args);
 
