@@ -64,7 +64,7 @@ echo "this is where the image is "
 ln -s /tmp/aeld/rootfs /tmp/aesd-autograder
 echo "this is after looking at the autograder `ls /tmp/aesd-autograder`"
 echo "this is the sysroot docker"
-echo ${CROSS_COMPILE}gcc -print-sysroot
+${CROSS_COMPILE}gcc -print-sysroot
 
 
 
@@ -111,14 +111,15 @@ sudo mknod -m 622 dev/tty1 c 4 2
 sudo mknod -m 622 dev/console c 5 1 
 
 # TODO: Clean and build the writer utility
-cp /tmp/assignment-1-widi9545/finder-app/writer.c /tmp/aeld/rootfs/home
-cp /tmp/assignment-1-widi9545/finder-app/start-qemu-terminal.sh /tmp/aeld/rootfs/home
-cp /tmp/assignment-1-widi9545/finder-app/start-qemu-app.sh /tmp/aeld/rootfs/home
-cp /tmp/assignment-1-widi9545/finder-app/autorun-qemu.sh /tmp/aeld/rootfs/home
+cd $FINDER_APP_DIR
+cp writer.c /tmp/aeld/rootfs/home
+cp start-qemu-terminal.sh /tmp/aeld/rootfs/home
+cp start-qemu-app.sh /tmp/aeld/rootfs/home
+cp autorun-qemu.sh /tmp/aeld/rootfs/home
 
-cp -r /tmp/assignment-1-widi9545/conf /tmp/aeld/rootfs/home
-cp /tmp/assignment-1-widi9545/finder-app/finder-test.sh /tmp/aeld/rootfs/home
-cp /tmp/assignment-1-widi9545/finder-app/finder.sh /tmp/aeld/rootfs/home
+cp -r conf /tmp/aeld/rootfs/home
+cp finder-test.sh /tmp/aeld/rootfs/home
+cp finder.sh /tmp/aeld/rootfs/home
 
 chmod -R 777 /tmp/aeld/rootfs/home
 
