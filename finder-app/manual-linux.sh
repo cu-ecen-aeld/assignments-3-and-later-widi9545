@@ -36,7 +36,6 @@ if [ ! -e $/tmp/aeld/linux-stable/arch/${ARCH}/boot/Image ]; then
     #make ARCH=${ARCH} CROSS_COMPILE=$CROSS_COMPILE mrproper
     make -j 9 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE defconfig
     make -j 9 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE all
-    make -j 9 ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE dtbs
 fi
 
 echo "Adding the Image in outdir"
@@ -60,6 +59,16 @@ mkdir -p var/log
 echo $PWD
 cp /tmp/aeld/linux-stable/arch/arm64/boot/Image /tmp/aeld/rootfs
 
+
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib64
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib64
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib64
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib64
+cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib
+
 cd "/tmp/aeld"
 if [ ! -d "/tmp/aeld/busybox" ]
 then
@@ -78,14 +87,7 @@ make CONFIG_PREFIX=/tmp/aeld/rootfs ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} 
 
 cd /tmp/aeld/rootfs
 
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib
+
 
 echo "Library dependencies"
 ${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter"
