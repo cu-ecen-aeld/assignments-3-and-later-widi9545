@@ -58,16 +58,18 @@ mkdir -p var/log
 
 echo $PWD
 cp /tmp/aeld/linux-stable/arch/arm64/boot/Image /tmp/aeld/rootfs
+ln -s /tmp/aeld/rootfs /tmp/aesd-autograder
+
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib64
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib64
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib64
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib64
+cp /tmp/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib
 
 
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 /tmp/aeld/rootfs/lib
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libm.so.6 /tmp/aeld/rootfs/lib
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 /tmp/aeld/rootfs/lib
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib64
-cp /home/widi9545/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64-none-linux-gnu/aarch64-none-linux-gnu/libc/lib64/libc.so.6 /tmp/aeld/rootfs/lib
 
 cd "/tmp/aeld"
 if [ ! -d "/tmp/aeld/busybox" ]
@@ -101,14 +103,14 @@ sudo mknod -m 622 dev/tty1 c 4 2
 sudo mknod -m 622 dev/console c 5 1 
 
 # TODO: Clean and build the writer utility
-cp /home/widi9545/assignment-1-widi9545/finder-app/writer.c /tmp/aeld/rootfs/home
-cp /home/widi9545/assignment-1-widi9545/finder-app/start-qemu-terminal.sh /tmp/aeld/rootfs/home
-cp /home/widi9545/assignment-1-widi9545/finder-app/start-qemu-app.sh /tmp/aeld/rootfs/home
-cp /home/widi9545/assignment-1-widi9545/finder-app/autorun-qemu.sh /tmp/aeld/rootfs/home
+cp /tmp/assignment-1-widi9545/finder-app/writer.c /tmp/aeld/rootfs/home
+cp /tmp/assignment-1-widi9545/finder-app/start-qemu-terminal.sh /tmp/aeld/rootfs/home
+cp /tmp/assignment-1-widi9545/finder-app/start-qemu-app.sh /tmp/aeld/rootfs/home
+cp /tmp/assignment-1-widi9545/finder-app/autorun-qemu.sh /tmp/aeld/rootfs/home
 
-cp -r /home/widi9545/assignment-1-widi9545/conf /tmp/aeld/rootfs/home
-cp /home/widi9545/assignment-1-widi9545/finder-app/finder-test.sh /tmp/aeld/rootfs/home
-cp /home/widi9545/assignment-1-widi9545/finder-app/finder.sh /tmp/aeld/rootfs/home
+cp -r /tmp/assignment-1-widi9545/conf /tmp/aeld/rootfs/home
+cp /tmp/assignment-1-widi9545/finder-app/finder-test.sh /tmp/aeld/rootfs/home
+cp /tmp/assignment-1-widi9545/finder-app/finder.sh /tmp/aeld/rootfs/home
 
 chmod -R 777 /tmp/aeld/rootfs/home
 
