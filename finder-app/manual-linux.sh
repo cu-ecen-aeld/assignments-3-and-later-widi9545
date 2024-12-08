@@ -58,7 +58,7 @@ mkdir -p usr/bin usr/lib usr/sbin
 mkdir -p var/log 
 
 echo $PWD
-rsync -avzP /tmp/aeld/linux-stable/arch/arm64/boot/Image /tmp/aeld/rootfs
+cp /tmp/aeld/linux-stable/arch/arm64/boot/Image /tmp/aeld/rootfs
 
 cd "/tmp/aeld"
 if [ ! -d "/tmp/aeld/busybox" ]
