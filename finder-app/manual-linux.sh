@@ -58,11 +58,13 @@ mkdir -p var/log
 
 echo "this is the working directory $PWD"
 echo "this is the hostname echo $HOSTNAME"
-echo "this is where the image is `/tmp/aeld/rootfs`"
+echo "this is where the image is "
 cp /tmp/aeld/linux-stable/arch/arm64/boot/Image /tmp/aeld/rootfs
-echo "this is where the image is `/tmp/aeld/rootfs`"
+echo "this is where the image is "
 ln -s /tmp/aeld/rootfs /tmp/aesd-autograder
 echo "this is after looking at the autograder `ls /tmp/aesd-autograder`"
+echo "this is the sysroot docker"
+echo ${CROSS_COMPILE}gcc -print-sysroot
 
 
 
