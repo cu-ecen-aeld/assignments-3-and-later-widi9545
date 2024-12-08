@@ -14,7 +14,6 @@ then
 echo "This is not a directory path - enter a directory path";
 exit 1
 fi
-echo "WE ARE HERE $filesdir"
 
 fileReturn=`ls -l $filesdir/* | wc -l`
 matchingLines=`grep -r $filesdir -e $searchstr | wc -l`
