@@ -9,7 +9,6 @@
 #include <arpa/inet.h>
 #include <signal.h>
 #include <pthread.h>
-#include <time.h>
 #include "linked-list.h"
 
 #define SIGINT 2
@@ -26,21 +25,21 @@
 
 // https://hpc-tutorials.llnl.gov/posix/passing_args/
 
-// https://stackoverflow.com/questions/13923885/execute-a-method-every-x-seconds-in-c
-
 int socket_fd;
 int connection;
+char * buffer;
 struct sockaddr_in address; 
 socklen_t addrlen = sizeof(address);
-pthread_mutex_t lock;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 int completionFlag = 0;
-
+FILE *fp;
+node* list = NULL;
 
 void handle_sigint(int sig){
     printf(" Caught signal %d, exiting gracefully\n", sig);
     close(connection);
     close(socket_fd);
-    pthread_mutex_destroy(&lock);
+    free(buffer);
     remove("/tmp/aesdsocket");
 
     exit(0);
@@ -51,7 +50,7 @@ void handle_sigterm(int sig){
     printf(" Caught signal %d, exiting gracefully\n", sig);
     close(connection);
     close(socket_fd);
-    pthread_mutex_destroy(&lock);
+    free(buffer);
     remove("/tmp/aesdsocket");
 
     exit(0);
@@ -59,83 +58,36 @@ void handle_sigterm(int sig){
 }
 
 
-void * timer(void *args){
-    while(1){
-        sleep(10);
-        pthread_mutex_lock(&lock);
-        
-        time_t t = time(NULL);
-        struct tm *tm = localtime(&t);
-        char i[] = "timestamp:";
-        char s[64];
-        char n[] = "\n";
-        size_t ret = strftime(s, sizeof(s), "%c", tm);
-        char * newstr = malloc(strlen(i)+ strlen(s) + strlen(n) + 1);
-        newstr[0] = '\0';
-        strcat(newstr, i);
-        strcat(newstr, s);
-        strcat(newstr, n);
-        printf("here is the string: %s", newstr);
+void * connection_processing(void *args){
 
-
-
-        FILE *fp = fopen("/tmp/aesdsocket", "a+");
-
-        if (fp) {
-            fwrite(newstr, sizeof(char), strlen(newstr), fp);
-            fclose(fp);
-        } else {
-            perror("File open failed!");
-        }
-        pthread_mutex_unlock(&lock);
-        free(newstr);
-
-    }
-}
-
-
-void *connection_processing(void *args) {
-    struct t_data *connection_thread_data = (struct t_data *)args;
+    struct t_data *connection_thread_data = args;
     
-    int connection = connection_thread_data->connection;
-    
-    char *local_buffer = (char *)malloc(32000 * sizeof(char));
-    if (!local_buffer) {
-        perror("Memory allocation failed");
-        pthread_exit(NULL);
-    }
+    int connection = connection_thread_data -> connection;
+    int completion = connection_thread_data -> completion;
 
-    ssize_t size = recv(connection, local_buffer, 32000, 0);
-    
+    buffer = (char *)malloc(32000 * sizeof(char));
+    ssize_t size = recv(connection, buffer, 128000,  0);
     pthread_mutex_lock(&lock);
-    FILE *fp = fopen("/tmp/aesdsocket", "a+");
-    if (fp) {
-        fwrite(local_buffer, sizeof(char), size, fp);
-        fclose(fp);
-    } else {
-        perror("File open failed!");
-    }
+    fp = fopen("/tmp/aesdsocket", "a+");
+    int write_to_file = fwrite(buffer, sizeof(char), size, fp);
+    fclose(fp);
     pthread_mutex_unlock(&lock);
-
-
-    char client_ip_address[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &address.sin_addr, client_ip_address, INET_ADDRSTRLEN);
+    char * client_ip_address = inet_ntoa(address.sin_addr);
     syslog(LOG_DEBUG, "Accepting connection from: %s", client_ip_address);
 
-    if (strchr(local_buffer, '\n')) {
+
+    if(strchr(buffer,'\n')){
         FILE *fr = fopen("/tmp/aesdsocket", "r");
         int bytes = 0;
-        if (fr) {
-            bytes = fread(local_buffer, sizeof(char), 32000, fr);
-            fclose(fr);
-        }
-        send(connection, local_buffer, bytes, 0);
+        bytes = fread(buffer, sizeof(char), 128000, fr);
+        fclose(fr);
+        send(connection, buffer, bytes, 0 );
         syslog(LOG_DEBUG, "Closing connection from: %s", client_ip_address);
+        push(&list, connection_thread_data -> thread_id);
+        
     }
-
-    free(local_buffer);
-    free(connection_thread_data); // Free dynamically allocated struct
-    pthread_exit(NULL);
+    
+    
 }
 
 
@@ -144,10 +96,12 @@ int start_socket(){
     int threads = 3;
     int i;
     int ret = -1;
-    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
     int sockopt; 
     int opt = 1;
     ssize_t input;
+    buffer = (char *)malloc(32000 * sizeof(char));
+
 
 
     if(socket_fd < 0){
@@ -186,9 +140,6 @@ int start_socket(){
         exit(-1);
     }
 
-    pthread_t timer_thread; 
-    pthread_create(&timer_thread, NULL, timer, NULL);
-
     while(completionFlag != 1){
         int complete = 0;
         /*1) create list
@@ -210,19 +161,13 @@ int start_socket(){
             exit(-1);
         }
 
-        struct t_data *thread_data = malloc(sizeof(struct t_data));
-        if (!thread_data) {
-            perror("Malloc Failed");
-            exit(1);
-        }
-        
+        struct t_data thread_data;
         pthread_t thread;
-        thread_data -> connection = connection;
-        thread_data -> completion = complete;
-        thread_data -> thread_id = thread;
+        thread_data.connection = connection;
+        thread_data.completion = complete;
+        thread_data.thread_id = thread;
         
-        pthread_create(&thread_data -> thread_id, NULL, connection_processing, (void *)thread_data);
-        pthread_join(thread_data -> thread_id, NULL);
+        pthread_create(&thread_data.thread_id, NULL, connection_processing, (void *)&thread_data);
     }
 
     return 0; 
