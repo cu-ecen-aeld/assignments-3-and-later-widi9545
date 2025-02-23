@@ -13,7 +13,8 @@
 #else
 #include <string.h>
 #endif
-
+#include <stdio.h>
+#include <stdlib.h>
 #include "aesd-circular-buffer.h"
 
 /**
@@ -29,10 +30,50 @@
 struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos(struct aesd_circular_buffer *buffer,
             size_t char_offset, size_t *entry_offset_byte_rtn )
 {
-    /**
-    * TODO: implement per description
-    */
+    size_t entry_offset = 0;
+    size_t offset_holder = 0;
+    size_t entry = buffer ->out_offs;
+    struct aesd_buffer_entry* entry_holder;
+
+    if (buffer == NULL) {
+        return NULL;
+    }
+
+    //check each entry for the offset that matches
+    // i < aesd
+    for(int i = 0; i < AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED; i++){
+        //printf("this is the iteration: %d \n", i);
+        // check entry
+        //set entry back to 0 to start iterating through again / not break circular device
+        if(entry == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED){
+            entry = 0;
+        }
+        // address needed otherwise we are assiging wrong type
+        entry_holder = &buffer->entry[entry];
+        entry_offset = entry_holder -> size;
+
+        if(char_offset < entry_offset + offset_holder){
+
+            *entry_offset_byte_rtn = char_offset - offset_holder;
+            return entry_holder;
+
+        }
+
+
+        offset_holder += entry_offset;
+        entry += 1;
+        printf("this is the entry: %lu \n", entry);
+        if(entry == buffer -> out_offs){
+            break;
+        }
+
+    }
+
+
+
     return NULL;
+    
+
 }
 
 /**
@@ -47,6 +88,36 @@ void aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, const s
     /**
     * TODO: implement per description
     */
+    //size_t size_of_buffer = add_entry -> size;
+
+
+    // grab offset, increment by 1, set check
+    uint8_t offset = buffer -> in_offs;
+    uint8_t new_location = offset + 1;
+    bool status_check = buffer -> full;
+
+    buffer -> entry[offset] = *add_entry;
+    // if not full, set new out location
+    // bool initializes to 0 in struct
+    if(status_check){
+        buffer -> out_offs = (new_location); 
+    }
+    // AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED defined in aesd-circular-buffer
+    if(new_location == AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED){
+        new_location = 0;
+    } 
+    buffer -> in_offs = (new_location);
+    printf("this is the number: %d \n", buffer->in_offs);
+
+
+    if(buffer -> in_offs == buffer -> out_offs){
+        buffer->full = true;
+    }
+
+
+
+    
+
 }
 
 /**
