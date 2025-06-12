@@ -27,6 +27,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 
 static struct aesd_dev aesd_device;
 
+
 int aesd_open(struct inode *inode, struct file *filp)
 {
     /**
@@ -50,13 +51,16 @@ int aesd_release(struct inode *inode, struct file *filp)
      */
     return 0;
 }
+
 ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
                 loff_t *f_pos)
 {
-    ssize_t retval;
-
+    ssize_t retval = 0;
+    /**
+     * TODO: handle read
+     */
     size_t offset;
-    size_t read;
+    size_t read_bytes;
     struct aesd_buffer_entry *entry;
     struct aesd_dev *dev = filp -> private_data;
     PDEBUG("read %zu bytes with offset %lld",count,*f_pos);
@@ -73,23 +77,20 @@ ssize_t aesd_read(struct file *filp, char __user *buf, size_t count,
         mutex_unlock(&dev->lock);
         return 0;
     }
-
-    read = entry->size - offset;
-    if(read > count){
-        PDEBUG("This is the count and offest: %zu and ", count, *f_pos);
-        read = count;
+    read_bytes = entry->size - offset;
+    if(read_bytes > count){
+        read_bytes = count;
     }
 
 
-    if (copy_to_user(buf, entry->buffptr + offset, read))
+    if (copy_to_user(buf, entry->buffptr + offset, read_bytes))
     {
-        PDEBUG("Copying to user: illegal");
         mutex_unlock(&dev->lock);
-        return 1;
+        return -EFAULT;
     }
 
-    *f_pos += read;
-    retval = read;
+    *f_pos += read_bytes;
+    retval = read_bytes;
     mutex_unlock(&dev->lock);
     return retval;
 }
@@ -112,13 +113,10 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
 
     kernel_buffer = kmalloc(count, GFP_KERNEL);
     if(!kernel_buffer){
-        PDEBUG("No kernel buffer - exit 1");
         return 1;
     }
 
-    //unsigned long __copy_from_user(void * to, const void __user * from, unsigned long n); - const void__user * from = buf 
     if (copy_from_user(kernel_buffer, buf, count)) {
-        PDEBUG("Copying from user: illegal");
         kfree(kernel_buffer);
         return 1;
     }
@@ -129,7 +127,7 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     mutex_lock(&dev->lock);
 
     if(&dev->buffer_entry.buffptr){
-        PDEBUG("In Buffer");
+
         new_size = dev->buffer_entry.size + count;
         new_buffer = krealloc(dev->buffer_entry.buffptr, new_size, GFP_KERNEL);
 
@@ -151,7 +149,6 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     }
 
     if(dev->buffer_entry.buffptr[dev->buffer_entry.size - 1] == '\n'){
-        PDEBUG("Ending Write");
         new_entry.buffptr = dev->buffer_entry.buffptr; 
         new_entry.size = dev->buffer_entry.size;
 
@@ -164,6 +161,8 @@ ssize_t aesd_write(struct file *filp, const char __user *buf, size_t count,
     retval = count;
     return retval;
 }
+
+
 
 
 
@@ -211,7 +210,7 @@ int aesd_init_module(void)
      */
     mutex_init(&aesd_device.lock);
     aesd_circular_buffer_init(&aesd_device.buffer);
- 
+    printk(KERN_ALERT "major: %d, minor: %d\n", aesd_major, aesd_minor);
 
     result = aesd_setup_cdev(&aesd_device);
 
@@ -225,20 +224,19 @@ int aesd_init_module(void)
 void aesd_cleanup_module(void)
 {
     dev_t devno = MKDEV(aesd_major, aesd_minor);
-    int index;
-    struct aesd_circular_buffer *buffer = &aesd_device.buffer;
-    struct aesd_buffer_entry *entry; 
 
     cdev_del(&aesd_device.cdev);
 
     /**
      * TODO: cleanup AESD specific poritions here as necessary
      */
-    AESD_CIRCULAR_BUFFER_FOREACH(entry, buffer, index){
-        if((entry -> size > 0) && (entry->buffptr != NULL)){
-            kfree(entry->buffptr);
-            entry->size = 0;
+    for(int i = 0; i < AESDCHAR_MAX_WRITE_OPERATIONS_SUPPORTED; i++){
+        if(aesd_device.buffer.entry[i].buffptr != NULL){
+            kfree(aesd_device.buffer.entry[i].buffptr);
         }
+    }
+    if(aesd_device.buffer_entry.buffptr){
+        kfree(aesd_device.buffer_entry.buffptr);
     }
 
     unregister_chrdev_region(devno, 1);

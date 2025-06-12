@@ -11,6 +11,11 @@
 #include <pthread.h>
 #include <time.h>
 #include "linked-list.h"
+#if USE_AESD_CHAR_DEVICE == 1
+    #define FILE_LOCATION ("/dev/aesdchar")
+#else
+    #define FILE_LOCATION ("/tmp/aesdsocket")
+#endif
 
 #define SIGINT 2
 
@@ -41,7 +46,10 @@ void handle_sigint(int sig){
     close(connection);
     close(socket_fd);
     pthread_mutex_destroy(&lock);
-    remove("/tmp/aesdsocket");
+    #if USE_AESD_CHAR_DEVICE == 0
+        remove("/tmp/aesdsocket");
+    #endif
+
 
     exit(0);
     
@@ -52,7 +60,9 @@ void handle_sigterm(int sig){
     close(connection);
     close(socket_fd);
     pthread_mutex_destroy(&lock);
-    remove("/tmp/aesdsocket");
+    #if USE_AESD_CHAR_DEVICE == 0
+        remove("/tmp/aesdsocket");
+    #endif
 
     exit(0);
     
@@ -79,7 +89,7 @@ void * timer(void *args){
 
 
 
-        FILE *fp = fopen("/tmp/aesdsocket", "a+");
+        FILE *fp = fopen(FILE_LOCATION, "a+");
 
         if (fp) {
             fwrite(newstr, sizeof(char), strlen(newstr), fp);
@@ -108,7 +118,7 @@ void *connection_processing(void *args) {
     ssize_t size = recv(connection, local_buffer, 32000, 0);
     
     pthread_mutex_lock(&lock);
-    FILE *fp = fopen("/tmp/aesdsocket", "a+");
+    FILE *fp = fopen(FILE_LOCATION, "a+");
     if (fp) {
         fwrite(local_buffer, sizeof(char), size, fp);
         fclose(fp);
@@ -123,7 +133,7 @@ void *connection_processing(void *args) {
     syslog(LOG_DEBUG, "Accepting connection from: %s", client_ip_address);
 
     if (strchr(local_buffer, '\n')) {
-        FILE *fr = fopen("/tmp/aesdsocket", "r");
+        FILE *fr = fopen(FILE_LOCATION, "r");
         int bytes = 0;
         if (fr) {
             bytes = fread(local_buffer, sizeof(char), 32000, fr);
@@ -186,8 +196,11 @@ int start_socket(){
         exit(-1);
     }
 
-    pthread_t timer_thread; 
-    pthread_create(&timer_thread, NULL, timer, NULL);
+
+    #if USE_AESD_CHAR_DEVICE == 0
+        pthread_t timer_thread; 
+        pthread_create(&timer_thread, NULL, timer, NULL);
+    #endif
 
     while(completionFlag != 1){
         int complete = 0;

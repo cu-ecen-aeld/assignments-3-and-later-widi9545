@@ -13,8 +13,6 @@
 #else
 #include <string.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
 #include "aesd-circular-buffer.h"
 
 /**
@@ -62,7 +60,6 @@ struct aesd_buffer_entry *aesd_circular_buffer_find_entry_offset_for_fpos(struct
 
         offset_holder += entry_offset;
         entry += 1;
-        printf("this is the entry: %lu \n", entry);
         if(entry == buffer -> out_offs){
             break;
         }
@@ -107,7 +104,7 @@ void aesd_circular_buffer_add_entry(struct aesd_circular_buffer *buffer, const s
         new_location = 0;
     } 
     buffer -> in_offs = (new_location);
-    printf("this is the number: %d \n", buffer->in_offs);
+
 
 
     if(buffer -> in_offs == buffer -> out_offs){
