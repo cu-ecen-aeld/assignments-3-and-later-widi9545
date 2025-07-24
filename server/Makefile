@@ -1,4 +1,4 @@
-CC ?=gcc
+CC ?=mpicc
 CFLAGS ?= -g -Wall 
 EXTRA_CFLAGS ?= -DUSE_AESD_CHAR_DEVICE=1
 LDFLAGS ?= -I/usr/lib/x86_64-linux-gnu/openmpi/include 
