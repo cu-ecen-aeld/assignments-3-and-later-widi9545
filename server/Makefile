@@ -1,3 +1,5 @@
+OMPI_CC=aarch64-linux-gnu-gcc
+
 CC ?=mpicc
 CFLAGS ?= -g -Wall 
 EXTRA_CFLAGS ?= -DUSE_AESD_CHAR_DEVICE=1
