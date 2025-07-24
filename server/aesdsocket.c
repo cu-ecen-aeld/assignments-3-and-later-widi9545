@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <time.h>
 #include "linked-list.h"
+#include <mpi.h>
 #if USE_AESD_CHAR_DEVICE == 1
     #define FILE_LOCATION ("/dev/aesdchar")
 #else
