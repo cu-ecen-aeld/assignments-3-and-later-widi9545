@@ -245,6 +245,9 @@ int start_socket(){
 int main(int argc, char * argv[]){
     int child_process = 0;
     int handler = 0;
+    int process_Rank, size_Of_Cluster;
+    MPI_Init(&argc, &argv);
+
 
     while((handler = getopt(argc, argv, "d")) != -1){
         switch(handler){
