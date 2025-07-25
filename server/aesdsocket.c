@@ -17,7 +17,7 @@
 #else
     #define FILE_LOCATION ("/tmp/aesdsocket")
 #endif
-
+int mpid, mpnum;
 #define SIGINT 2
 
 
@@ -235,6 +235,7 @@ int start_socket(){
         thread_data -> completion = complete;
         thread_data -> thread_id = thread;
         
+        
         pthread_create(&thread_data -> thread_id, NULL, connection_processing, (void *)thread_data);
         pthread_join(thread_data -> thread_id, NULL);
     }
@@ -247,6 +248,9 @@ int main(int argc, char * argv[]){
     int handler = 0;
     int process_Rank, size_Of_Cluster;
     MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD,&child_process);
+    MPI_Comm_size(MPI_COMM_WORLD,&mpnum);
+
 
 
     while((handler = getopt(argc, argv, "d")) != -1){
@@ -263,19 +267,11 @@ int main(int argc, char * argv[]){
     if(child_process == 0){
     start_socket();
     }
-    if(child_process == 1){
-        pid_t pid = fork();
-        if(pid < 0 ){
-            perror("fork error");
-            exit(1);
-        }
-        if(pid == 0){
-            signal(SIGINT, handle_sigint);
-            signal(SIGTERM, handle_sigterm);
-            while(1){
-                start_socket();
-            }
-        }
+    if(child_process >= 1){
+        signal(SIGINT, handle_sigint);
+        signal(SIGTERM, handle_sigterm);
+        start_socket();
+        
     
     }
 
